@@ -62,7 +62,9 @@ jobs:
         name: Standalone TurboWarp Build
         tag_name: build
         body: |
-          Download the `tw-standalone.html` file and open it in your browser to use TW. Still very experimental, not all things will work properly.
+          Download the `tw-standalone.html` file below and open it in your browser to use TurboWarp.
+          Still very experimental, not all things will work properly.
+          Extensions are currently still fetched from extensions.turbowarp.org, eventually I will add a separate build that also bundles the extensions.
         files: "*.*"
         make_latest: true
         fail_on_unmatched_files: true
