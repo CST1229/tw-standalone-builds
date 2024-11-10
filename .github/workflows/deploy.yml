@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
   id-token: write
 
 concurrency:
@@ -27,13 +26,6 @@ jobs:
       with:
         repository: TurboWarp/scratch-gui
         path: scratch-gui
-    - name: Setup GitHub Pages
-      id: pages
-      uses: actions/configure-pages@v4
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
     - name: Build
       run: |
         cd scratch-gui
