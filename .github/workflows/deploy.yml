@@ -34,7 +34,7 @@ jobs:
       run: python3 patch.py
     - name: Create zip
       run: |
-        7z a -tzip tw-standalone.zip ./scratch-gui/build/* -mx0 
+        7z a -tzip tw-standalone.zip ./scratch-gui/build/*
     - name: Upload artifact
       uses: actions/upload-artifact@v4.4.3
       with:
@@ -60,7 +60,6 @@ jobs:
       with:
         name: Build
         tag_name: build
-        files: |
-          */*
+        files: "*.*"
         make_latest: true
         fail_on_unmatched_files: true
