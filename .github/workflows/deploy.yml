@@ -32,14 +32,15 @@ jobs:
         NODE_ENV=production ROUTING_STYLE=hash npm run build
     - name: Patch
       run: python3 patch.py
-    - name: Create zip
+    - name: Bundle into single file
       run: |
-        7z a -tzip tw-standalone.zip ./scratch-gui/build/*
+        cd scratch-gui/build
+        node ../../patch_singlefile.mjs
     - name: Upload artifact
       uses: actions/upload-artifact@v4.4.3
       with:
         name: tw-standalone
-        path: tw-standalone.zip
+        path: tw-standalone.html
   
   release:
     needs: [build]
@@ -58,8 +59,10 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v2.0.9
       with:
-        name: Build
+        name: Standalone TurboWarp Build
         tag_name: build
+        body: |
+          Download the `tw-standalone.html` file and open it in your browser to use TW. Still very experimental, not all things will work properly.
         files: "*.*"
         make_latest: true
         fail_on_unmatched_files: true
