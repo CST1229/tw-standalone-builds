@@ -50,6 +50,8 @@ jobs:
       with:
         delete_release: true
         tag_name: build
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Release
       uses: softprops/action-gh-release@v2.0.9
       with:
@@ -59,3 +61,5 @@ jobs:
           */*
         make_latest: true
         fail_on_unmatched_files: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
