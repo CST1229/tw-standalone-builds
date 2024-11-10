@@ -8,8 +8,7 @@ on:
     - cron: '52 18 * * 2'
 
 permissions:
-  contents: read
-  id-token: write
+  contents: write
 
 concurrency:
   group: "deploy"
