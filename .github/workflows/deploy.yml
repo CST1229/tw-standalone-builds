@@ -32,6 +32,9 @@ jobs:
         NODE_ENV=production ROUTING_STYLE=hash npm run build
     - name: Patch
       run: python3 patch.py
+    - name: Create zip
+      run: |
+        7z a -tzip tw-standalone.zip ./scratch-gui/* -mx0 
     - name: Upload artifact
       uses: actions/upload-artifact@v4.4.3
       with:
@@ -44,6 +47,8 @@ jobs:
     steps:
     - name: Download artifacts
       uses: actions/download-artifact@v4
+      with:
+        merge-multiple: true
     - name: Delete tag and release
       uses: dev-drprasad/delete-tag-and-release@v1.1
       with:
