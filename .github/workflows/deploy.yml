@@ -40,7 +40,7 @@ jobs:
       uses: actions/upload-artifact@v4.4.3
       with:
         name: tw-standalone
-        path: tw-standalone.html
+        path: scratch-gui/build/tw-standalone.html
   
   release:
     needs: [build]
