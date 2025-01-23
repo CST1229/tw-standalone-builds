@@ -41,13 +41,13 @@ jobs:
         cd scratch-gui
         npm ci
         NODE_ENV=production ROUTING_STYLE=hash npm run build
-        cd..
+        cd ..
     - name: Build extensions
       run: |
         cd extensions
         npm ci
         NODE_ENV=production npm run build
-        cd..
+        cd ..
     - name: Patch
       run: python3 patch.py
     - name: Bundle into single file
