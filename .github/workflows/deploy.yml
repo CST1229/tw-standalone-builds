@@ -18,6 +18,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v4.1.0
+      with:
+        node-version: 20
     - name: Checkout self
       uses: actions/checkout@v4
     - name: Checkout scratch-gui
