@@ -46,15 +46,15 @@ const inlinedRegexes = [
 	String.raw`static/assets/.+?\.\w+`,
 	String.raw`privacy.html`,
 	String.raw`credits.html`,
-];
+].filter(o => o);
 const inlinedRawRegexes = [
 	// scratch-blocks assets
 	String.raw`\w+\.mainWorkspace\.options\.pathToMedia\+".+?"`,
 	// extension thumbnails
 	withExtensions && String.raw`"https://extensions.turbowarp.org/"\.concat\(\w+\.image\|\|"images/unknown.svg"\)`
-];
-const convertRegex = new RegExp(`(["'])(${inlinedRegexes.map(o => !o ? "" : "(?:" + o + ")").join("|")})\\1`, "gi");
-const convertRawRegex = new RegExp(`(${inlinedRawRegexes.map(o => !o ? "" : "(?:" + o + ")").join("|")})`, "gi");
+].filter(o => o);
+const convertRegex = new RegExp(`(["'])(${inlinedRegexes.map(o => "(?:" + o + ")").join("|")})\\1`, "gi");
+const convertRawRegex = new RegExp(`(${inlinedRawRegexes.map(o => "(?:" + o + ")").join("|")})`, "gi");
 function inlineFile(path) {
 	const contents = fsSync.readFileSync(path, {encoding: "utf8"});
 	return contents
