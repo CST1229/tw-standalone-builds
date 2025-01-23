@@ -11,7 +11,7 @@ for path in glob.glob('scratch-gui/build/*.html'):
   with open(path, 'w') as f:
     f.write(contents)
 
-for path in glob.glob('scratch-gui/build/js/*.js'):
+for path in glob.glob('scratch-gui/build/**/*.js', recursive=True):
   print(f'Patching JS {path}')
   with open(path, 'r') as f:
     contents = f.read()
@@ -22,7 +22,6 @@ for path in glob.glob('scratch-gui/build/js/*.js'):
 os.remove('scratch-gui/build/sw.js')
 os.remove('scratch-gui/build/manifest.webmanifest')
 os.remove('scratch-gui/build/fullscreen.html')
-os.remove('scratch-gui/build/embed.html')
 os.remove('scratch-gui/build/index.html')
 os.remove('scratch-gui/build/embedtest.html')
 os.remove('scratch-gui/build/embedtestbad.html')
