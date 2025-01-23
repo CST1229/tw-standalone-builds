@@ -1,16 +1,44 @@
 /*
-	EXTRENEKY messy script to bundle TurboWarp
-	and all of its assets into a single HTML file.
+	EXTREMELY messy script to bundle TurboWarp and all of its assets into a single HTML file.
+
+	Arguments (all optional):
+	--output [path] - set the output file. defaults to tw-standalone[-offline-extensions].html
+	--guiPath [path] - set the path to the GUI. defaults to scratch-gui/build
+	--extensions [path?] - enable inlining extensions, with an optional path. defaults to extensions/build if path not set
+	--debug - outputs inlined assets to a folder
 */
 
 import * as fs from "node:fs/promises";
 import * as fsSync from "node:fs";
+import * as path from "node:path";
+import {argv} from "node:process";
 
 // If true, builds with an integrated extensions.turbowarp.org mirror.
 // Not implemented yet.
-const withExtensions = false;
+const withExtensions = argv.includes("--extensions");
 // Write processed (inlinable) assets back into a folder.
-const debugAssets = false;
+const debugAssets = argv.includes("--debug");
+
+// Path to get GUI build from.
+let guiPath = "scratch-gui/build/";
+// Path to get built extensions from.
+let extensionsPath = "extensions/build/";
+// Output file.
+let output = "tw-standalone" + (withExtensions ? "-offline-extensions" : "") + ".html";
+
+argv.forEach((val, index) => {
+	if (val === "--guiPath") {
+		guiPath = argv[index + 1];
+	} else if (val === "--output") {
+		output = argv[index + 1];
+	} else if (val === "--extensions") {
+		const newPath = argv[index + 1];
+		if (newPath && !newPath.startsWith("--"))
+			extensionsPath = newPath;
+	}
+});
+
+const extsTwOrg = "https://extensions.turbowarp.org/";
 
 const inlinedRegexes = [
 	String.raw`js/pentapod/\w.+?\.js`,
@@ -20,10 +48,13 @@ const inlinedRegexes = [
 	String.raw`credits.html`,
 ];
 const inlinedRawRegexes = [
+	// scratch-blocks assets
 	String.raw`\w+\.mainWorkspace\.options\.pathToMedia\+".+?"`,
+	// extension thumbnails
+	withExtensions && String.raw`"https://extensions.turbowarp.org/"\.concat\(\w+\.image\|\|"images/unknown.svg"\)`
 ];
-const convertRegex = new RegExp(`(["'])(${inlinedRegexes.map(o => "(?:" + o + ")").join("|")})\\1`, "gi");
-const convertRawRegex = new RegExp(`(${inlinedRawRegexes.map(o => "(?:" + o + ")").join("|")})`, "gi");
+const convertRegex = new RegExp(`(["'])(${inlinedRegexes.map(o => !o ? "" : "(?:" + o + ")").join("|")})\\1`, "gi");
+const convertRawRegex = new RegExp(`(${inlinedRawRegexes.map(o => !o ? "" : "(?:" + o + ")").join("|")})`, "gi");
 function inlineFile(path) {
 	const contents = fsSync.readFileSync(path, {encoding: "utf8"});
 	return contents
@@ -34,21 +65,21 @@ function inlineFile(path) {
 }
 function inlineBlobUrl(path) {
 	if (path === '"credits.html"') {
-		return `(location.pathname + "?credits")`;
+		return `(location.pathname+"?credits")`;
 	} else if (path === '"privacy.html"') {
-		return `(location.pathname + "?privacy-policy")`;
+		return `(location.pathname+"?privacy-policy")`;
 	}
-	return `(window.___GET_BLOB_URL(${path}))`;
+	return `$url(${path})`;
 }
 
 
 // Every asset path and its corresponding base85 (or data url)
 const cache = {};
 const lengthCache = {};
+// Store small assets and SVGs as data URLs. For SVGs, they *have* to be data URLs due to MIME type stuff
 const assetIsDataUrl = {};
 
-const rootFile = "editor.html";
-const output = "tw-standalone" + (withExtensions ? "-offline-extensions" : "") + ".html";
+const rootFile = guiPath + "editor.html";
 function generateBlobCode(html) {
 	const blobCode = `{
 	// Generated code to make everything work in a single file
@@ -91,9 +122,11 @@ function generateBlobCode(html) {
 	}});
 	
 	window.___GET_BLOB_URL = function(url) {
-		if (window.___BLOB_URLS[url]) return window.___BLOB_URLS[url];
+		if (url in window.___BLOB_URLS) return window.___BLOB_URLS[url];
 		throw new Error("Couldn't get blob url: " + url);
 	};
+	// shorthand to decrease filesize
+	window.$url = window.___GET_BLOB_URL;
 	
 	// Patch a bunch of functions
 	
@@ -102,10 +135,21 @@ function generateBlobCode(html) {
 	window.open = function(...args) {
 		if (args[0] === "addons.html") args[0] = location.pathname + "?addon-settings"
 		return oldWindowOpen.apply(this, args);
+	};${!withExtensions ? "" : `
+	const oldFetch = fetch;
+	window.fetch = function(...args) {
+		if (args[0] && args[0] in window.___BLOB_URLS)
+			return oldFetch.apply(this, [window.___BLOB_URLS[args[0]], ...args.slice(1)]);
+		return oldFetch.apply(this, args);
 	};
-	// const oldFetch = fetch;
-	// window.fetch = function(...args) {console.log("fetch", args); return oldFetch.apply(this, args)};
-	// window.addEventListener("load", () => console.log("got vm", window.vm));
+	// Redirect extensions.turbowarp.org script tags (unsandboxed extensions) to our inlined files
+	const oldAppendChild = document.body.appendChild;
+	document.body.appendChild = function(...args) {
+		const firstArg = args[0];
+		if (firstArg && firstArg.tagName === "SCRIPT" && firstArg.src in window.___BLOB_URLS)
+			firstArg.src = window.___BLOB_URLS[firstArg.src];
+		return oldAppendChild.apply(this, args);
+	}`}
 }`;
 	return html.replace(`<div id="app"></div>`, `<div id="app"></div>
 <script>document.querySelector(".splash-screen").textContent="Loading assets...";</script>
@@ -143,18 +187,18 @@ function inlineScriptTags(file) {
 	return file.replaceAll(scriptTagRegex, (string, src) => {
 		let script;
 		if (addonSettingsEntrypoint && src.startsWith("js/pentapod/editor")) {
-			const privacyHTML = fsSync.readFileSync("privacy.html", {encoding: "utf8"});
+			const privacyHTML = fsSync.readFileSync(guiPath + "privacy.html", {encoding: "utf8"});
 			script = `if (location.search.includes("?addon-settings") || location.search.includes("&addon-settings")) {${
-				fixModuleScript(inlineFile(addonSettingsEntrypoint))
+				fixModuleScript(inlineFile(path.resolve(guiPath, addonSettingsEntrypoint)))
 			}} else if (location.search.includes("?credits") || location.search.includes("&credits")) {${
-				fixModuleScript(inlineFile(creditsEntrypoint))
+				fixModuleScript(inlineFile(path.resolve(guiPath, creditsEntrypoint)))
 			}} else if (location.search.includes("?privacy-policy") || location.search.includes("&privacy-policy")) {
 				window.onload = () => document.documentElement.innerHTML = ${JSON.stringify(privacyHTML)};
 			}else {${
-				fixModuleScript(inlineFile(src))}
+				fixModuleScript(inlineFile(path.resolve(guiPath, src)))}
 			}`
 		} else {
-			script = fixModuleScript(inlineFile(src));
+			script = fixModuleScript(inlineFile(path.resolve(guiPath, src)));
 		}
 		return `<script>${script}`
 	});
@@ -238,37 +282,55 @@ function toDataUrl(buffer, path = "") {
 
 const MIN_BLOBURL_LENGTH = 4096;
 
-async function parseAsset(file) {
+async function parseAsset(file, asFile = file) {
 	let buffer;
 	if (file.endsWith(".js")) {
 		buffer = Buffer.from(inlineFile(file));
 	} else {
 		buffer = await fs.readFile(file);
 	}
-	if (debugAssets) fs.mkdir("standalone_assets/" + file.split("/").slice(0,-1).join("/"), {recursive: true})
-		.then(() => fs.writeFile("standalone_assets/" + file, buffer));
-	
-	lengthCache[file] = buffer.length;
-	assetIsDataUrl[file] = (lengthCache[file] < MIN_BLOBURL_LENGTH) || file.endsWith(".svg");
-	if (!assetIsDataUrl[file]) {
-		const arr = new Uint8Array(buffer);
-		cache[file] = base85Encode(arr);
-	} else {
-		cache[file] = toDataUrl(buffer, file);
+	if (debugAssets) {
+		const realPath = asFile.replaceAll("https://", "");
+		fs.mkdir("standalone_assets/" + realPath.split("/").slice(0,-1).join("/"), {recursive: true})
+			.then(() => fs.writeFile("standalone_assets/" + realPath, buffer));
 	}
-	console.log("Added to assets:", file);
+	
+	lengthCache[asFile] = buffer.length;
+	assetIsDataUrl[asFile] = (lengthCache[asFile] < MIN_BLOBURL_LENGTH) || file.endsWith(".svg");
+	if (!assetIsDataUrl[asFile]) {
+		const arr = new Uint8Array(buffer);
+		cache[asFile] = base85Encode(arr);
+	} else {
+		cache[asFile] = toDataUrl(buffer, asFile);
+	}
+	console.log("Added to assets:", file, "as", asFile);
 }
 
 if (debugAssets) await fs.mkdir("standalone_assets/", {recursive: true});
-const files = await fs.readdir(".", {recursive: true});
+
+console.log("Adding assets...");
 const promises = [];
-for (let file of files) {
-	file = file.replaceAll("\\", "/");
-	if (
-		file.endsWith(".bat") || file.endsWith(".mjs") || file.endsWith(".html") ||
-		isCommonModule(file) || !file.includes(".")
-	) continue;
-	promises.push(parseAsset(file));
+{
+	const files = await fs.readdir(guiPath, {recursive: true});
+	for (let file of files) {
+		file = file.replaceAll("\\", "/");
+		if (
+			file.endsWith(".bat") || file.endsWith(".mjs") || file.endsWith(".html") ||
+			isCommonModule(file) || !file.includes(".")
+		) continue;
+		promises.push(parseAsset(guiPath + file, file));
+	}
+}
+if (withExtensions) {
+	const files = await fs.readdir(extensionsPath, {recursive: true});
+	for (let file of files) {
+		file = file.replaceAll("\\", "/");
+		if (
+			(!file.endsWith(".js") && !file.endsWith(".json") && !file.startsWith("images/")) || !file.includes(".")
+			|| file.startsWith("test/") || file.startsWith("docs-examples/") || file.startsWith("docs-internal/")
+		) continue;
+		promises.push(parseAsset(extensionsPath + file, extsTwOrg + file));
+	}
 }
 await Promise.all(promises);
 

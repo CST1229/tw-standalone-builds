@@ -29,22 +29,36 @@ jobs:
       with:
         repository: TurboWarp/scratch-gui
         path: scratch-gui
-    - name: Build
+    - name: Checkout extensions
+      uses: actions/checkout@v4
+      with:
+        repository: TurboWarp/extensions
+        path: extensions
+    - name: Build GUI
       run: |
         cd scratch-gui
         npm ci
         NODE_ENV=production ROUTING_STYLE=hash npm run build
+        cd..
+    - name: Build extensions
+      run: |
+        cd extensions
+        npm ci
+        NODE_ENV=production npm run build
+        cd..
     - name: Patch
       run: python3 patch.py
     - name: Bundle into single file
       run: |
-        cd scratch-gui/build
-        node ../../patch_singlefile.mjs
+        node patch_singlefile.mjs
+        node patch_singlefile.mjs --extensions
     - name: Upload artifact
       uses: actions/upload-artifact@v4.4.3
       with:
         name: tw-standalone
-        path: scratch-gui/build/tw-standalone.html
+        path: |
+          tw-standalone.html
+          tw-standalone-offline-extensions.html
   
   release:
     needs: [build]
@@ -68,7 +82,7 @@ jobs:
         body: |
           Download the `tw-standalone.html` file below and open it in your browser to use TurboWarp.
           Still very experimental, not all things will work properly.
-          Extensions are currently still fetched from extensions.turbowarp.org, eventually I will add a separate build that also bundles the extensions.
+          By default, extensions are fetched from online. `tw-standalone-offline-extensions.html` makes the extensions themselves work offline, but documentation pages, extension example files, sample projects and the standalone library page (not the one in the editor) will still only be online.
         files: "*.*"
         make_latest: true
         fail_on_unmatched_files: true
