@@ -87,7 +87,7 @@ jobs:
         body: |
           Download the `tw-standalone.html` file below and open it in your browser to use TurboWarp.
           Still very experimental, not all things will work properly.
-          By default, unsandboxed TurboWarp extensions are still fetched from extensions.turbowarp.org. Use `tw-standalone-offline-extensions.html` instead for the extensions themselves work offline, but documentation pages, extension example files, sample projects and the standalone library page (not the one in the editor) will still only be online.
+          By default, unsandboxed TurboWarp extensions are still fetched from extensions.turbowarp.org. Use `tw-standalone-offline-extensions.html` instead for the extensions themselves to work offline, but documentation pages, extension example files, sample projects and the standalone library page (not the one in the editor) will still only be online.
         files: "*.*"
         make_latest: true
         fail_on_unmatched_files: true
