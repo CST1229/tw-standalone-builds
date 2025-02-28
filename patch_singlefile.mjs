@@ -50,6 +50,8 @@ const inlinedRegexes = [
 const inlinedRawRegexes = [
 	// scratch-blocks assets
 	String.raw`\w+\.mainWorkspace\.options\.pathToMedia\+".+?"`,
+	// scratch-blocks zoom icons
+	String.raw`\w+\.options\.pathToMedia\+this\.\w+_PATH_`,
 	// extension thumbnails
 	withExtensions && String.raw`"https://extensions.turbowarp.org/"\.concat\(\w+\.image\|\|"images/unknown.svg"\)`
 ].filter(o => o);
