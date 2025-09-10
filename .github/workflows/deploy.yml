@@ -18,9 +18,8 @@ jobs:
   build:
     strategy:
       matrix:
-        mod: [turbowarp, EXPERIMENTAL-penguinmod]
-    env:
-      repo: ${{ matrix.mod == 'tw' && 'TurboWarp/scratch-gui' || 'PenguinMod/penguinmod.github.io' }}
+        mod: [turbowarp]
+        # mod: [turbowarp, EXPERIMENTAL-penguinmod]
     name: "build: ${{ matrix.mod }}"
     runs-on: ubuntu-latest
     steps:
@@ -35,7 +34,7 @@ jobs:
     - name: Checkout scratch-gui
       uses: actions/checkout@v4
       with:
-        repository: ${{ env.repo }}
+        repository: ${{ (matrix.mod == 'tw' && 'TurboWarp/scratch-gui') || 'PenguinMod/penguinmod.github.io' }}
         path: scratch-gui
     - name: Checkout TurboWarp extensions
       uses: actions/checkout@v4
