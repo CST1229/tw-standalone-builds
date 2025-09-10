@@ -21,7 +21,7 @@ jobs:
         mod: [turbowarp, EXPERIMENTAL-penguinmod]
     env:
       repo: ${{ matrix.mod == "tw" && "TurboWarp/scratch-gui" || "PenguinMod/penguinmod.github.io" }}
-    name: build: ${{ matrix.mod }}
+    name: "build: ${{ matrix.mod }}"
     runs-on: ubuntu-latest
     steps:
     - name: Setup Node.js environment
