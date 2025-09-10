@@ -16,6 +16,12 @@ concurrency:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        mod: [turbowarp, EXPERIMENTAL-penguinmod]
+    env:
+      repo: ${{ matrix.mod == "tw" && "TurboWarp/scratch-gui" : "PenguinMod/penguinmod.github.io" }}
+    name: build: ${{ matrix.mod }}
     runs-on: ubuntu-latest
     steps:
     - name: Setup Node.js environment
@@ -29,9 +35,9 @@ jobs:
     - name: Checkout scratch-gui
       uses: actions/checkout@v4
       with:
-        repository: TurboWarp/scratch-gui
+        repository: ${{ env.repo }}
         path: scratch-gui
-    - name: Checkout extensions
+    - name: Checkout TurboWarp extensions
       uses: actions/checkout@v4
       with:
         repository: TurboWarp/extensions
@@ -57,15 +63,17 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tw-standalone
-        path: tw-standalone.html
+        name: ${{ matrix.mod }}-standalone
+        path: ${{ matrix.mod }}-standalone.html
     - name: Upload extensions artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tw-standalone-offline-extensions
-        path: tw-standalone-offline-extensions.html
+        name: ${{ matrix.mod }}-standalone-offline-extensions
+        path: ${{ matrix.mod }}-standalone-offline-extensions.html
   
   release:
+    # disable releases for now
+    if: ${{ false }}
     needs: [build]
     runs-on: ubuntu-latest
     steps:
