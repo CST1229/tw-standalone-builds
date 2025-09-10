@@ -68,12 +68,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.mod }}-standalone
-        path: tw-standalone.html
+        path: ${{ matrix.mod }}-standalone.html
     - name: Upload extensions artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.mod }}-standalone-offline-extensions
-        path: tw-standalone-offline-extensions.html
+        path: ${{ matrix.mod }}-standalone-offline-extensions.html
   
   release:
     needs: [build]
