@@ -20,7 +20,7 @@ jobs:
       matrix:
         mod: [turbowarp, EXPERIMENTAL-penguinmod]
     env:
-      repo: ${{ matrix.mod == "tw" && "TurboWarp/scratch-gui" || "PenguinMod/penguinmod.github.io" }}
+      repo: ${{ matrix.mod == 'tw' && 'TurboWarp/scratch-gui' || 'PenguinMod/penguinmod.github.io' }}
     name: "build: ${{ matrix.mod }}"
     runs-on: ubuntu-latest
     steps:
