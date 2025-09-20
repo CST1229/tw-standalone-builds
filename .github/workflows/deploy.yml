@@ -34,7 +34,7 @@ jobs:
     - name: Checkout scratch-gui
       uses: actions/checkout@v4
       with:
-        repository: ${{ (matrix.mod == 'tw' && 'TurboWarp/scratch-gui') || 'PenguinMod/penguinmod.github.io' }}
+        repository: ${{ (matrix.mod == 'turbowarp' && 'TurboWarp/scratch-gui') || 'PenguinMod/penguinmod.github.io' }}
         path: scratch-gui
     - name: Checkout TurboWarp extensions
       uses: actions/checkout@v4
