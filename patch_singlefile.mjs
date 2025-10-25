@@ -63,7 +63,9 @@ function inlineFile(path) {
 		.replaceAll(convertRegex,
 			(string, quote, url) => inlineBlobUrl(quote+url+quote)
 		)
-		.replaceAll(convertRawRegex, (string, url) => inlineBlobUrl(url));
+		.replaceAll(convertRawRegex, (string, url) => inlineBlobUrl(url))
+		// this is gonna be put into a script tag, so ensure closing script tags are escaped
+		.replaceAll("</script>", "<\\/script>");
 }
 function inlineBlobUrl(path) {
 	if (path === '"credits.html"') {
