@@ -65,7 +65,7 @@ function inlineFile(path) {
 		)
 		.replaceAll(convertRawRegex, (string, url) => inlineBlobUrl(url))
 		// this is gonna be put into a script tag, so ensure closing script tags are escaped
-		.replaceAll("</script>", "&lt;\\/script>");
+		.replaceAll("</script>", "<\\/script>");
 }
 function inlineBlobUrl(path) {
 	if (path === '"credits.html"') {
@@ -197,7 +197,7 @@ function inlineScriptTags(file) {
 			}} else if (location.search.includes("?credits") || location.search.includes("&credits")) {${
 				fixModuleScript(inlineFile(path.resolve(guiPath, creditsEntrypoint)))
 			}} else if (location.search.includes("?privacy-policy") || location.search.includes("&privacy-policy")) {
-				window.onload = () => document.documentElement.innerHTML = ${JSON.stringify(privacyHTML)};
+				window.onload = () => document.documentElement.innerHTML = ${JSON.stringify(privacyHTML).replaceAll("</script>", "<\\/script>")};
 			}else {${
 				fixModuleScript(inlineFile(path.resolve(guiPath, src)))}
 			}`
